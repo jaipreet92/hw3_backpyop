@@ -12,3 +12,29 @@ def load_training_data_from_binary():
     print(input_x_feature_matrix.shape)
     return input_x_feature_matrix
 
+
+def load_training_labels_from_binary():
+    raw_file = open('../data/train-labels.idx1-ubyte', 'rb')
+    raw_file.seek(8)
+    labels = np.fromfile(file=raw_file, dtype=np.ubyte, count=-1)
+    print(labels.shape)
+    return labels
+
+
+def load_testing_data_from_binary():
+    raw_file = open('../data/t10k-images-pca.idx2-double', 'rb')
+    raw_file.seek(12)
+
+    flattened_data = np.fromfile(file=raw_file, dtype=np.double, count=-1)
+    # 10000 x 50
+    input_x_feature_matrix = np.reshape(flattened_data, (10000, 50), order='C')
+    print(input_x_feature_matrix.shape)
+    return input_x_feature_matrix
+
+
+def load_testing_labels_from_binary():
+    raw_file = open('../data/t10k-labels.idx1-ubyte', 'rb')
+    raw_file.seek(8)
+    labels = np.fromfile(file=raw_file, dtype=np.ubyte, count=-1)
+    print(labels.shape)
+    return labels
