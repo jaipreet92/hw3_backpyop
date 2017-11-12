@@ -41,7 +41,7 @@ def feed_forward(training_example,
         hidden_layer_values.append(hidden_unit_value)
     hidden_layer_values = special.expit(hidden_layer_values)
     assert parameter_factory.num_hidden_unit() == hidden_layer_values.shape[0]
-    print('Hidden layer shape: {}'.format(hidden_layer_values.shape))
+    #print('Hidden layer shape: {}'.format(hidden_layer_values.shape))
 
     # calculate values at output layer
     output_layer_values = []
@@ -54,7 +54,7 @@ def feed_forward(training_example,
         output_layer_values.append(output_unit_value)
     output_layer_values = special.expit(output_layer_values)
     assert 10 == output_layer_values.shape[0]
-    print('Output layer shape: {}'.format(output_layer_values.shape))
+    #print('Output layer shape: {}'.format(output_layer_values.shape))
 
     return hidden_layer_values, output_layer_values
 
