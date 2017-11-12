@@ -38,3 +38,14 @@ def load_testing_labels_from_binary():
     labels = np.fromfile(file=raw_file, dtype=np.ubyte, count=-1)
     print(labels.shape)
     return labels
+
+
+def transform_output_label_into_vector(training_data_labels):
+    rows = training_data_labels.shape[0]
+    label_vector = np.zeros((rows, 10))
+
+    for i in range(rows):
+        idx = training_data_labels[i]  # The digit being represented
+        label_vector[i, idx] = 1.0
+
+    return label_vector
