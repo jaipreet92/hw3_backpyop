@@ -120,17 +120,25 @@ def update_network_weights(input_layer_weights,
     :param parameter_factory:
     """
     # Update input_hidden layer weights
+    total_input_unit_weight_delta = 0.0
+    total_hidden_unit_weight_delta = 0.0
     num_input_units, num_output_units = input_layer_weights.shape
     for i in range(num_input_units):
         for j in range(num_output_units):
-            input_layer_weights[i, j] += parameter_factory.learning_rate() * hidden_unit_error_terms[j] * \
-                                         training_example[i]
+            weight_delta = parameter_factory.learning_rate() * hidden_unit_error_terms[j] * \
+                           training_example[i]
+            input_layer_weights[i, j] += weight_delta
+            total_input_unit_weight_delta += weight_delta
     # Update hidden_output layer weights
     num_hidden_units, num_output_units = hidden_layer_weights.shape
     for i in range(num_hidden_units):
         for j in range(num_output_units):
-            hidden_layer_weights[i, j] += parameter_factory.learning_rate() * output_unit_error_terms[j] * \
-                                          hidden_layer_values[i]
+            weight_delta = parameter_factory.learning_rate() * output_unit_error_terms[j] * \
+                           hidden_layer_values[i]
+            hidden_layer_weights[i, j] += weight_delta
+            total_hidden_unit_weight_delta += weight_delta
+    print('Weight deltas: Input layer: {} Hidden Layer: {}'.format(total_input_unit_weight_delta,
+                                                                   total_hidden_unit_weight_delta))
 
 
 def do_train(training_data_features, training_data_labels):

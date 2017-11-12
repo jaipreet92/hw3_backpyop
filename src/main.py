@@ -31,7 +31,7 @@ class ParameterFactory:
     _training_unit_weights = None
     _hidden_unit_weights = None
 
-    def __init__(self, num_hidden_units=15, mini_batch_size=100, learning_rate=0.1):
+    def __init__(self, num_hidden_units=100, mini_batch_size=100, learning_rate=0.1):
         self._learning_rate = learning_rate
         self._mini_batch_size = mini_batch_size
         self._num_hidden_units = num_hidden_units
