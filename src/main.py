@@ -50,12 +50,12 @@ class ParameterFactory:
 
     def initialize_weights(self, num_input_units=51, num_output_units=10):
         if self._training_unit_weights is None:
-            training_unit_weights = np.full((num_input_units, self._num_hidden_units), 0.5)
+            training_unit_weights = np.full((num_input_units, self._num_hidden_units), 0.1)
         else:
             training_unit_weights = self._training_unit_weights
 
         if self._hidden_unit_weights is None:
-            hidden_unit_weights = np.full((self._num_hidden_units, num_output_units), 0.5)
+            hidden_unit_weights = np.full((self._num_hidden_units, num_output_units), 0.1)
         else:
             hidden_unit_weights = self._hidden_unit_weights
 

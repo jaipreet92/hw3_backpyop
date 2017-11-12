@@ -27,6 +27,9 @@ def feed_forward(training_example,
     num_input_units, num_hidden_units = input_layer_weights.shape
     assert training_example.shape[0] == num_input_units
 
+    if np.any(np.isnan(training_example)):
+        raise ValueError('We got a nan value this should not happen')
+
     # calculate values at hidden layer
     hidden_layer_values = []
     input_layer_weights = input_layer_weights.transpose()  # 15 x 51
@@ -149,6 +152,11 @@ def do_train(training_data_features, training_data_labels):
     """
     assert training_data_features.shape[0] == training_data_labels.shape[0]
 
+
+    # Replace nan values in the training data
+    replace_nan_values(training_data_features, training_data_labels)
+
+    # Initialize training parameters
     parameter_factory = ParameterFactory()
     input_unit_weights, hidden_unit_weights = parameter_factory.initialize_weights()
 
@@ -166,7 +174,6 @@ def do_train(training_data_features, training_data_labels):
                                                                                  hidden_unit_weights,
                                                                                  hidden_layer_values,
                                                                                  output_layer_values)
-
         update_network_weights(input_unit_weights,
                                hidden_unit_weights,
                                hidden_unit_error_terms,
@@ -176,3 +183,16 @@ def do_train(training_data_features, training_data_labels):
                                hidden_layer_values)
         end_time = time.time()
         print('Training example {} took {} seconds'.format(idx, end_time - start_time))
+
+
+def replace_nan_values(training_data, training_data_labels):
+    """
+    Replaces 'nan' values in the training data with 0.0, as these cause problems down the line when using these
+    values
+    :param training_data:
+    :param training_data_labels:
+    """
+    if np.any(np.isnan(training_data)):
+        np.nan_to_num(training_data, copy=False)
+    if np.any(np.isnan(training_data_labels)):
+        np.nan_to_num(training_data_labels, copy=False)
