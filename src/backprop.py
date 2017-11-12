@@ -1,6 +1,7 @@
 import numpy as np
 from main import ParameterFactory
 import scipy.special as special
+import time
 
 
 def get_unit_output(weights, values):
@@ -148,6 +149,7 @@ def do_train(training_data_features, training_data_labels):
     training_data_features_with_bias = np.insert(training_data_features, 0, np.full((60000,), 1.0), axis=1)
 
     for idx, training_example in enumerate(training_data_features_with_bias):
+        start_time = time.time()
         hidden_layer_values, output_layer_values = feed_forward(training_example,
                                                                 input_unit_weights,
                                                                 hidden_unit_weights,
@@ -164,3 +166,5 @@ def do_train(training_data_features, training_data_labels):
                                parameter_factory,
                                training_example,
                                hidden_layer_values)
+        end_time = time.time()
+        print('Training example {} took {} seconds'.format(idx, end_time - start_time))
