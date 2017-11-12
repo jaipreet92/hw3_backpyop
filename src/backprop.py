@@ -164,25 +164,27 @@ def do_train(training_data_features, training_data_labels):
     # first input unit being of fixed value 1.0
     training_data_features_with_bias = np.insert(training_data_features, 0, np.full((60000,), 1.0), axis=1)
 
-    for idx, training_example in enumerate(training_data_features_with_bias):
-        start_time = time.time()
-        hidden_layer_values, output_layer_values = feed_forward(training_example,
-                                                                input_unit_weights,
-                                                                hidden_unit_weights,
-                                                                parameter_factory)
-        hidden_unit_error_terms, output_unit_error_terms = back_propagate_errors(training_data_labels[idx],
-                                                                                 hidden_unit_weights,
-                                                                                 hidden_layer_values,
-                                                                                 output_layer_values)
-        update_network_weights(input_unit_weights,
-                               hidden_unit_weights,
-                               hidden_unit_error_terms,
-                               output_unit_error_terms,
-                               parameter_factory,
-                               training_example,
-                               hidden_layer_values)
-        end_time = time.time()
-        print('Training example {} took {} seconds'.format(idx, end_time - start_time))
+    for n in range(parameter_factory.num_epochs()):
+        for idx, training_example in enumerate(training_data_features_with_bias):
+            start_time = time.time()
+            hidden_layer_values, output_layer_values = feed_forward(training_example,
+                                                                    input_unit_weights,
+                                                                    hidden_unit_weights,
+                                                                    parameter_factory)
+            hidden_unit_error_terms, output_unit_error_terms = back_propagate_errors(training_data_labels[idx],
+                                                                                     hidden_unit_weights,
+                                                                                     hidden_layer_values,
+                                                                                     output_layer_values)
+            update_network_weights(input_unit_weights,
+                                   hidden_unit_weights,
+                                   hidden_unit_error_terms,
+                                   output_unit_error_terms,
+                                   parameter_factory,
+                                   training_example,
+                                   hidden_layer_values)
+            end_time = time.time()
+            print('Training example {} took {} seconds'.format(idx, end_time - start_time))
+    print('Wait!')
 
 
 def replace_nan_values(training_data, training_data_labels):

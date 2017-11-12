@@ -27,14 +27,19 @@ class ParameterFactory:
     _mini_batch_size = None
     _learning_rate = None
     _num_output_units = 10
+    _num_epochs = None
 
     _training_unit_weights = None
     _hidden_unit_weights = None
 
-    def __init__(self, num_hidden_units=100, mini_batch_size=100, learning_rate=0.1):
+    def __init__(self, num_hidden_units=100, mini_batch_size=100, learning_rate=0.1, num_epochs = 1):
         self._learning_rate = learning_rate
         self._mini_batch_size = mini_batch_size
         self._num_hidden_units = num_hidden_units
+        self._num_epochs = num_epochs
+
+    def num_epochs(self):
+        return self._num_epochs
 
     def num_hidden_unit(self):
         return self._num_hidden_units
