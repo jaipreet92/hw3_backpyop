@@ -1,16 +1,9 @@
 import numpy as np
-from main import ParameterFactory
 import scipy.special as special
 import time
 
-
-def get_unit_output(weights, values):
-    assert len(weights) == len(values)
-
-    output = 0.0
-    for idx, weight in enumerate(weights):
-        output += weight * values[idx]
-    return output
+from parameters import ParameterFactory
+from trainednetwork import TrainedNetwork
 
 
 def feed_forward(training_example,
@@ -19,6 +12,7 @@ def feed_forward(training_example,
                  parameter_factory=None):
     """
     Feed forward part of the the BackPropagation algorithmn
+    :param parameter_factory:
     :rtype: object
     :param training_example: 51 x 1 ndarray
     :param input_layer_weights: 51 x num_hidden_units ndarray
@@ -41,7 +35,7 @@ def feed_forward(training_example,
         hidden_layer_values.append(hidden_unit_value)
     hidden_layer_values = special.expit(hidden_layer_values)
     assert parameter_factory.num_hidden_unit() == hidden_layer_values.shape[0]
-    #print('Hidden layer shape: {}'.format(hidden_layer_values.shape))
+    # print('Hidden layer shape: {}'.format(hidden_layer_values.shape))
 
     # calculate values at output layer
     output_layer_values = []
@@ -54,7 +48,7 @@ def feed_forward(training_example,
         output_layer_values.append(output_unit_value)
     output_layer_values = special.expit(output_layer_values)
     assert 10 == output_layer_values.shape[0]
-    #print('Output layer shape: {}'.format(output_layer_values.shape))
+    # print('Output layer shape: {}'.format(output_layer_values.shape))
 
     return hidden_layer_values, output_layer_values
 
@@ -144,14 +138,16 @@ def update_network_weights(input_layer_weights,
                                                                    total_hidden_unit_weight_delta))
 
 
-def do_train(training_data_features, training_data_labels):
+def do_train(training_data_features,
+             training_data_labels,
+             testing_data_features,
+             testing_data_labels):
     """
 
     :param training_data_features: 60000 x 50 matrix
     :param training_data_labels:  60000 x 1 matrix
     """
     assert training_data_features.shape[0] == training_data_labels.shape[0]
-
 
     # Replace nan values in the training data
     replace_nan_values(training_data_features, training_data_labels)
@@ -165,6 +161,7 @@ def do_train(training_data_features, training_data_labels):
     training_data_features_with_bias = np.insert(training_data_features, 0, np.full((60000,), 1.0), axis=1)
 
     for n in range(parameter_factory.num_epochs()):
+        squared_error = 0.0
         for idx, training_example in enumerate(training_data_features_with_bias):
             start_time = time.time()
             hidden_layer_values, output_layer_values = feed_forward(training_example,
@@ -183,7 +180,14 @@ def do_train(training_data_features, training_data_labels):
                                    training_example,
                                    hidden_layer_values)
             end_time = time.time()
+            if idx%5000 == 0 and idx != 0:
+                nn = TrainedNetwork(input_unit_weights, hidden_unit_weights)
+                squared_error += nn.test_predictions(training_data_features_with_bias, training_data_labels)
             print('Training example {} took {} seconds'.format(idx, end_time - start_time))
+
+        nn = TrainedNetwork(input_unit_weights, hidden_unit_weights)
+        squared_error += nn.test_predictions(training_data_features_with_bias, training_data_labels)
+        print('Squared error after epoch {} is {}'.format(squared_error, n))
     print('Wait!')
 
 
