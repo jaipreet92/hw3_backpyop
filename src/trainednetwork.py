@@ -25,6 +25,8 @@ class TrainedNetwork:
         num_examples, num_features = testing_features.shape
         assert num_features == self._input_layer_weights.shape[0]
 
+        correct_count = 0
+        incorrect_count = 0
         for i in range(num_examples):
             hidden_unit_outputs = special.expit(np.dot(testing_features[i], self._input_layer_weights))
             output_units = special.expit(np.dot(hidden_unit_outputs, self._hidden_layer_weights))
@@ -32,10 +34,13 @@ class TrainedNetwork:
 
             predicted_value = np.argmax(output_units)
             actual_value = np.argmax(testing_labels[i])
-            print('Output for sample number {} Predicted Value: {} , Actual Value: {}'.format(i, predicted_value,
-                                                                                              actual_value))
+            if predicted_value == actual_value:
+                correct_count += 1
+            else:
+                incorrect_count += 1
             # get prediction from output units
             # get Mean Square error
+        print('Output for sample number {} Correct: {} , Incorrect: {}'.format(i, correct_count,incorrect_count))
         return 0.0
 
     def test_prediction(self, testing_example, output):

@@ -134,8 +134,8 @@ def update_network_weights(input_layer_weights,
                            hidden_layer_values[i]
             hidden_layer_weights[i, j] += weight_delta
             total_hidden_unit_weight_delta += weight_delta
-    print('Weight deltas: Input layer: {} Hidden Layer: {}'.format(total_input_unit_weight_delta,
-                                                                   total_hidden_unit_weight_delta))
+    # print('Weight deltas: Input layer: {} Hidden Layer: {}'.format(total_input_unit_weight_delta,
+    #                                                                total_hidden_unit_weight_delta))
 
 
 def do_train(training_data_features,
@@ -183,7 +183,7 @@ def do_train(training_data_features,
             if idx%5000 == 0 and idx != 0:
                 nn = TrainedNetwork(input_unit_weights, hidden_unit_weights)
                 squared_error += nn.test_predictions(training_data_features_with_bias, training_data_labels)
-            print('Training example {} took {} seconds'.format(idx, end_time - start_time))
+            #print('Training example {} took {} seconds'.format(idx, end_time - start_time))
 
         nn = TrainedNetwork(input_unit_weights, hidden_unit_weights)
         squared_error += nn.test_predictions(training_data_features_with_bias, training_data_labels)
