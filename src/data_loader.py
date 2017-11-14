@@ -49,3 +49,12 @@ def transform_output_label_into_vector(training_data_labels):
         label_vector[i, idx] = 1.0
 
     return label_vector
+
+
+def get_sample_data():
+    zeros = np.zeros((8, 8))
+    for i in range(8):
+        for j in range(8):
+            if i == j:
+                zeros[i, j] = 1
+    return zeros

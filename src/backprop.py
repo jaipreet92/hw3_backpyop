@@ -2,77 +2,31 @@ import numpy as np
 import scipy.special as special
 import time
 
-from parameters import ParameterFactory
+from parameters import HyperParameters
 from trainednetwork import TrainedNetwork
 
 
 def feed_forward(training_example,
                  input_layer_weights,
-                 hidden_layer_weights,
-                 parameter_factory=None):
+                 hidden_layer_weights):
     """
     Feed forward part of the the BackPropagation algorithmn
-    :param parameter_factory:
     :rtype: object
     :param training_example: 51 x 1 ndarray
     :param input_layer_weights: 51 x num_hidden_units ndarray
     :param hidden_layer_weights: num_hidden_units x 10 ndarray
     """
-    num_input_units, num_hidden_units = input_layer_weights.shape
-    assert training_example.shape[0] == num_input_units
-
-    if np.any(np.isnan(training_example)):
-        raise ValueError('We got a nan value this should not happen')
-
-    # calculate values at hidden layer
-    hidden_layer_values = []
-    input_layer_weights = input_layer_weights.transpose()  # 15 x 51
-    rows, columns = input_layer_weights.shape
-    for i in range(rows):
-        hidden_unit_value = 0.0
-        for j in range(columns):
-            hidden_unit_value += training_example[j] * input_layer_weights[i, j]
-        hidden_layer_values.append(hidden_unit_value)
-    hidden_layer_values = special.expit(hidden_layer_values)
-    assert parameter_factory.num_hidden_unit() == hidden_layer_values.shape[0]
-    # print('Hidden layer shape: {}'.format(hidden_layer_values.shape))
-
-    # calculate values at output layer
-    output_layer_values = []
-    hidden_layer_weights = hidden_layer_weights.transpose()  # 10 x 15
-    rows, columns = hidden_layer_weights.shape
-    for i in range(rows):
-        output_unit_value = 0.0
-        for j in range(columns):
-            output_unit_value += hidden_layer_values[j] * hidden_layer_weights[i, j]
-        output_layer_values.append(output_unit_value)
-    output_layer_values = special.expit(output_layer_values)
-    assert 10 == output_layer_values.shape[0]
-    # print('Output layer shape: {}'.format(output_layer_values.shape))
-
+    # calculate hidden layer values
+    hidden_layer_values = special.expit(np.dot(training_example, input_layer_weights))
+    # calculate output layer values
+    output_layer_values = special.expit(np.dot(hidden_layer_values, hidden_layer_weights))
     return hidden_layer_values, output_layer_values
-
-
-# def output_unit_error(output_unit_value, actual_value):
-#     return output_unit_value * (1.0 - output_unit_value) * (actual_value - output_unit_value)
-#
-#
-# output_error_func = np.vectorize(output_unit_error)
-#
-#
-# def hidden_unit_error(hidden_unit_value, hidden_unit_weights, output_unit_errors):
-#     return hidden_unit_value * (1.0 - hidden_unit_value) * np.dot(hidden_unit_weights, output_unit_errors)
-#
-#
-# hidden_unit_error_func = np.vectorize(hidden_unit_error)
 
 
 def back_propagate_errors(training_example_label,
                           hidden_layer_weights,
                           hidden_unit_values,
                           output_unit_values):
-    # Calculate error for each output unit
-    # Compare each labels [0 0 0 1 0 0 0 0 0 0] for 3 with the output layer value
     """
 
     :param training_example_label: 10 x 1 ndarray for actual output layer or label for current training example
@@ -81,61 +35,33 @@ def back_propagate_errors(training_example_label,
     :param output_unit_values: 10 x 1 ndarray representing the output unit values obtained after feed forward
     """
     assert training_example_label.shape[0] == output_unit_values.shape[0]
-    output_unit_error_terms = []
-    for idx, output_unit_value in enumerate(output_unit_values):
-        output_unit_error = output_unit_value * (1 - output_unit_value) * (
-            training_example_label[idx] - output_unit_value)
-        output_unit_error_terms.append(output_unit_error)
 
-    # Calculate error for each hidden unit
-    hidden_unit_error_terms = []
-    for i, hidden_unit_value in enumerate(hidden_unit_values):
-        hidden_unit_error_term = 0.0
-        for j, output_unit_error_term in enumerate(output_unit_error_terms):
-            hidden_unit_error_term += hidden_layer_weights[i, j] * output_unit_error_term
-        hidden_unit_error_term = hidden_unit_value * (1 - hidden_unit_value) * hidden_unit_error_term
-        hidden_unit_error_terms.append(hidden_unit_error_term)
+    output_unit_error_terms = output_unit_values * (np.full(output_unit_values.shape, 1.0) - output_unit_values) * (
+        training_example_label - output_unit_values)
+
+    hidden_unit_error_terms = np.dot(hidden_layer_weights, output_unit_error_terms) * hidden_unit_values * (
+        np.full(hidden_unit_values.shape, 1.0) - hidden_unit_values)
 
     return hidden_unit_error_terms, output_unit_error_terms
 
 
-def update_network_weights(input_layer_weights,
-                           hidden_layer_weights,
-                           hidden_unit_error_terms,
-                           output_unit_error_terms,
-                           parameter_factory,
-                           training_example,
-                           hidden_layer_values):
+def get_weight_delta(hidden_unit_error_terms,
+                     output_unit_error_terms,
+                     parameter_factory,
+                     training_example,
+                     hidden_layer_values):
     """
 
     :param hidden_layer_values:  num_hidden_units x 1 ndarray representing the values calculated at the hidden layer
     :param training_example: 51 x 1 ndarray representing the input layer values of the training example
-    :param input_layer_weights: 51 x num_hidden_units ndarray representing weights between input layer and hidden layer
-    :param hidden_layer_weights:  num_hidden_units x 10 ndarray representing weights between hidden layer and output layer
     :param hidden_unit_error_terms: num_hidden_units x 1 ndarray representing error terms of the hidden layer // LIST
     :param output_unit_error_terms: 10 x 1 ndarray representing error terms of the output layer
     :param parameter_factory:
     """
-    # Update input_hidden layer weights
-    total_input_unit_weight_delta = 0.0
-    total_hidden_unit_weight_delta = 0.0
-    num_input_units, num_output_units = input_layer_weights.shape
-    for i in range(num_input_units):
-        for j in range(num_output_units):
-            weight_delta = parameter_factory.learning_rate() * hidden_unit_error_terms[j] * \
-                           training_example[i]
-            input_layer_weights[i, j] += weight_delta
-            total_input_unit_weight_delta += weight_delta
-    # Update hidden_output layer weights
-    num_hidden_units, num_output_units = hidden_layer_weights.shape
-    for i in range(num_hidden_units):
-        for j in range(num_output_units):
-            weight_delta = parameter_factory.learning_rate() * output_unit_error_terms[j] * \
-                           hidden_layer_values[i]
-            hidden_layer_weights[i, j] += weight_delta
-            total_hidden_unit_weight_delta += weight_delta
-    # print('Weight deltas: Input layer: {} Hidden Layer: {}'.format(total_input_unit_weight_delta,
-    #                                                                total_hidden_unit_weight_delta))
+    input_unit_weights_delta = np.outer(training_example, hidden_unit_error_terms) * parameter_factory.learning_rate()
+    hidden_unit_weights_delta = np.outer(hidden_layer_values,
+                                         output_unit_error_terms) * parameter_factory.learning_rate()
+    return input_unit_weights_delta, hidden_unit_weights_delta
 
 
 def do_train(training_data_features,
@@ -153,42 +79,65 @@ def do_train(training_data_features,
     replace_nan_values(training_data_features, training_data_labels)
 
     # Initialize training parameters
-    parameter_factory = ParameterFactory()
-    input_unit_weights, hidden_unit_weights = parameter_factory.initialize_weights()
+    parameters = HyperParameters(num_hidden_units=3, num_epochs=200000, num_input_units=8, num_output_units=8)
+    input_unit_weights, hidden_unit_weights = parameters.initialize_weights()
 
-    # Add bias units to the training features. This makes it 51 units in the input layer with the
-    # first input unit being of fixed value 1.0
-    training_data_features_with_bias = np.insert(training_data_features, 0, np.full((60000,), 1.0), axis=1)
+    # Add bias units to the training features.
+    # training_data_features_with_bias = np.insert(training_data_features, 0,
+    #                                             np.full((training_data_features.shape[0],), 1.0), axis=1)
 
-    for n in range(parameter_factory.num_epochs()):
+    input_unit_weights_delta = np.zeros(input_unit_weights.shape)
+    hidden_unit_weights_delta = np.zeros(hidden_unit_weights.shape)
+    for n in range(parameters.num_epochs()):
         squared_error = 0.0
-        for idx, training_example in enumerate(training_data_features_with_bias):
+        for idx, training_example in enumerate(training_data_features):
             start_time = time.time()
+            # SGD
+            input_unit_weights = input_unit_weights + input_unit_weights_delta
+            hidden_unit_weights = hidden_unit_weights + hidden_unit_weights_delta
+
             hidden_layer_values, output_layer_values = feed_forward(training_example,
                                                                     input_unit_weights,
-                                                                    hidden_unit_weights,
-                                                                    parameter_factory)
+                                                                    hidden_unit_weights)
             hidden_unit_error_terms, output_unit_error_terms = back_propagate_errors(training_data_labels[idx],
                                                                                      hidden_unit_weights,
                                                                                      hidden_layer_values,
                                                                                      output_layer_values)
-            update_network_weights(input_unit_weights,
-                                   hidden_unit_weights,
-                                   hidden_unit_error_terms,
-                                   output_unit_error_terms,
-                                   parameter_factory,
-                                   training_example,
-                                   hidden_layer_values)
-            end_time = time.time()
-            if idx%5000 == 0 and idx != 0:
-                nn = TrainedNetwork(input_unit_weights, hidden_unit_weights)
-                squared_error += nn.test_predictions(training_data_features_with_bias, training_data_labels)
-            #print('Training example {} took {} seconds'.format(idx, end_time - start_time))
-
-        nn = TrainedNetwork(input_unit_weights, hidden_unit_weights)
-        squared_error += nn.test_predictions(training_data_features_with_bias, training_data_labels)
-        print('Squared error after epoch {} is {}'.format(squared_error, n))
+            input_unit_weights_delta, hidden_unit_weights_delta = get_weight_delta(hidden_unit_error_terms,
+                                                                                   output_unit_error_terms,
+                                                                                   parameters,
+                                                                                   training_example,
+                                                                                   hidden_layer_values)
+        # nn = TrainedNetwork(input_unit_weights, hidden_unit_weights)
+        # squared_error += nn.test_predictions(training_example, training_data_labels)
+        # print('Squared error after epoch {} is {}'.format(squared_error, n))
+        if n % 500 == 0:
+            total_square_error, correct_predictions, incorrect_predictions = get_squared_error(testing_data_features,
+                                                                                               testing_data_labels,
+                                                                                               input_unit_weights,
+                                                                                               hidden_unit_weights)
+            print('n {} : SE: {} Correct: {} Incorrect: {}'.format(n, total_square_error, correct_predictions,
+                                                                   incorrect_predictions))
     print('Wait!')
+
+
+def get_squared_error(testing_data_features, testing_data_labels, input_unit_weights, hidden_unit_weights):
+    total_square_error = 0.0
+    correct_predictions = 0.0
+    incorrect_predictions = 0.0
+    for idx, test_example in enumerate(testing_data_features):
+        predicted_values = feed_forward(test_example, input_unit_weights, hidden_unit_weights)[1]
+        actual_values = testing_data_labels[idx]
+        total_square_error += np.sum(np.square(predicted_values - actual_values))
+
+        if np.argmax(testing_data_labels[idx]) == np.argmax(predicted_values):
+            correct_predictions += 1.0
+        else:
+            incorrect_predictions += 1.0
+
+    if total_square_error == 0.0:
+        raise ValueError('0 error ?!')
+    return total_square_error / (2.0 * testing_data_labels.shape[0]), correct_predictions, incorrect_predictions
 
 
 def replace_nan_values(training_data, training_data_labels):
