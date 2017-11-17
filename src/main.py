@@ -24,6 +24,4 @@ if __name__ == '__main__':
                       testing_features,
                       data_loader.transform_output_label_into_vector(testing_labels))
 
-    # Test the neural net
-
 

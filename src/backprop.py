@@ -49,18 +49,25 @@ def get_weight_delta(hidden_unit_error_terms,
                      output_unit_error_terms,
                      parameter_factory,
                      training_example,
-                     hidden_layer_values):
+                     hidden_layer_values,
+                     previous_input_weights_delta,
+                     previous_hidden_unit_weights_delta):
     """
 
+    :param previous_hidden_unit_weights_delta:
+    :param previous_input_weights_delta:
     :param hidden_layer_values:  num_hidden_units x 1 ndarray representing the values calculated at the hidden layer
     :param training_example: 51 x 1 ndarray representing the input layer values of the training example
     :param hidden_unit_error_terms: num_hidden_units x 1 ndarray representing error terms of the hidden layer // LIST
     :param output_unit_error_terms: 10 x 1 ndarray representing error terms of the output layer
     :param parameter_factory:
     """
-    input_unit_weights_delta = np.outer(training_example, hidden_unit_error_terms) * parameter_factory.learning_rate()
-    hidden_unit_weights_delta = np.outer(hidden_layer_values,
-                                         output_unit_error_terms) * parameter_factory.learning_rate()
+    input_unit_weights_delta = (np.outer(training_example,
+                                         hidden_unit_error_terms) * parameter_factory.learning_rate()) + (
+                                   parameter_factory.momentum() * previous_input_weights_delta)
+    hidden_unit_weights_delta = (np.outer(hidden_layer_values,
+                                          output_unit_error_terms) * parameter_factory.learning_rate()) + (
+                                    parameter_factory.momentum() * previous_hidden_unit_weights_delta)
     return input_unit_weights_delta, hidden_unit_weights_delta
 
 
@@ -79,12 +86,13 @@ def do_train(training_data_features,
     replace_nan_values(training_data_features, training_data_labels)
 
     # Initialize training parameters
-    parameters = HyperParameters(num_hidden_units=100,
+    parameters = HyperParameters(num_hidden_units=1000,
                                  num_epochs=30,
                                  num_input_units=51,
                                  num_output_units=10,
                                  mini_batch_size=1,
-                                 learning_rate=0.1)
+                                 learning_rate=0.1,
+                                 momentum=0.1)
     input_unit_weights, hidden_unit_weights = parameters.initialize_weights()
 
     training_data_features = scale(training_data_features, axis=0, with_mean=True, with_std=True)
@@ -94,13 +102,16 @@ def do_train(training_data_features,
     training_data_features = np.insert(training_data_features, 0,
                                        np.full((training_data_features.shape[0],), 1.0), axis=1)
     testing_data_features = np.insert(testing_data_features, 0,
-                                       np.full((testing_data_features.shape[0],), 1.0), axis=1)
+                                      np.full((testing_data_features.shape[0],), 1.0), axis=1)
 
     input_unit_weights_delta = np.zeros(input_unit_weights.shape)
     hidden_unit_weights_delta = np.zeros(hidden_unit_weights.shape)
+
+    previous_input_unit_weights_delta = np.zeros(input_unit_weights.shape)
+    previous_hidden_unit_weights_delta = np.zeros(hidden_unit_weights.shape)
+
     for n in range(parameters.num_epochs()):
         for idx, training_example in enumerate(training_data_features):
-            # SGD
             if idx % parameters.mini_batch_size() == 0:
                 input_unit_weights = input_unit_weights + input_unit_weights_delta
                 hidden_unit_weights = hidden_unit_weights + hidden_unit_weights_delta
@@ -114,14 +125,20 @@ def do_train(training_data_features,
                                                                                      hidden_unit_weights,
                                                                                      hidden_layer_values,
                                                                                      output_layer_values)
-            curr_input_unit_weights_delta, curr_hidden_unit_weights_delta = get_weight_delta(hidden_unit_error_terms,
-                                                                                             output_unit_error_terms,
-                                                                                             parameters,
-                                                                                             training_example,
-                                                                                             hidden_layer_values)
+            curr_input_unit_weights_delta, curr_hidden_unit_weights_delta = \
+                get_weight_delta(hidden_unit_error_terms,
+                                 output_unit_error_terms,
+                                 parameters,
+                                 training_example,
+                                 hidden_layer_values,
+                                 previous_input_unit_weights_delta,
+                                 previous_hidden_unit_weights_delta)
             input_unit_weights_delta += curr_input_unit_weights_delta
             hidden_unit_weights_delta += curr_hidden_unit_weights_delta
-        if n % 1 == 0:
+            previous_input_unit_weights_delta = curr_input_unit_weights_delta
+            previous_hidden_unit_weights_delta = curr_hidden_unit_weights_delta
+
+        if (idx+1) % 30000 == 0:
             total_square_error, correct_predictions, incorrect_predictions = get_squared_error(testing_data_features,
                                                                                                testing_data_labels,
                                                                                                input_unit_weights,

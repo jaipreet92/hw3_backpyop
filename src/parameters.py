@@ -7,6 +7,7 @@ class HyperParameters:
     _learning_rate = None
     _num_output_units = 10
     _num_epochs = None
+    _momentum = None
 
     _training_unit_weights = None
     _hidden_unit_weights = None
@@ -16,13 +17,18 @@ class HyperParameters:
                  learning_rate=0.1,
                  num_epochs=1,
                  num_input_units=51,
-                 num_output_units=10):
+                 num_output_units=10,
+                 momentum=0.1):
         self._learning_rate = learning_rate
         self._mini_batch_size = mini_batch_size
         self._num_hidden_units = num_hidden_units
         self._num_epochs = num_epochs
         self._num_input_units = num_input_units
         self._num_output_units = num_output_units
+        self._momentum = momentum
+
+    def momentum(self):
+        return self._momentum
 
     def num_epochs(self):
         return self._num_epochs
