@@ -1,6 +1,6 @@
 import numpy as np
 import scipy.special as special
-import time
+import matplotlib.pyplot as plt
 from sklearn.preprocessing import scale
 
 from parameters import HyperParameters
@@ -86,8 +86,8 @@ def do_train(training_data_features,
     replace_nan_values(training_data_features, training_data_labels)
 
     # Initialize training parameters
-    parameters = HyperParameters(num_hidden_units=1000,
-                                 num_epochs=30,
+    parameters = HyperParameters(num_hidden_units=100,
+                                 num_epochs=15,
                                  num_input_units=51,
                                  num_output_units=10,
                                  mini_batch_size=1,
@@ -109,6 +109,10 @@ def do_train(training_data_features,
 
     previous_input_unit_weights_delta = np.zeros(input_unit_weights.shape)
     previous_hidden_unit_weights_delta = np.zeros(hidden_unit_weights.shape)
+
+    # Values for plotting
+    epoch_nums = np.arange(0.0, parameters.num_epochs(), 0.5)
+    epoch_mse_vals = []
 
     for n in range(parameters.num_epochs()):
         for idx, training_example in enumerate(training_data_features):
@@ -145,7 +149,9 @@ def do_train(training_data_features,
                                                                                                    hidden_unit_weights)
                 print('n {} : SE: {} Correct: {} Incorrect: {}'.format(n, total_square_error, correct_predictions,
                                                                        incorrect_predictions))
+                epoch_mse_vals.append(total_square_error)
     print('Done!')
+    plot_error(parameters, epoch_nums, epoch_vals_test=epoch_mse_vals)
 
 
 def get_squared_error(testing_data_features, testing_data_labels, input_unit_weights, hidden_unit_weights):
@@ -178,3 +184,11 @@ def replace_nan_values(training_data, training_data_labels):
         np.nan_to_num(training_data, copy=False)
     if np.any(np.isnan(training_data_labels)):
         np.nan_to_num(training_data_labels, copy=False)
+
+def plot_error(parameters, epoch_nums, epoch_vals_test, epoch_vals_train=None):
+    fig, ax = plt.subplots()
+    ax.plot(epoch_nums, epoch_vals_test)
+    if epoch_vals_train is not None:
+        ax.plot(epoch_nums, epoch_vals_train)
+    ax.set(xlabel='Epoch #', ylabel='Squared Error', title='Hidden units: {}'.format(parameters.num_hidden_unit()))
+    fig.savefig('../data/{}_hu_plot.png'.format(parameters.num_hidden_unit()))
