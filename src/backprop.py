@@ -138,14 +138,14 @@ def do_train(training_data_features,
             previous_input_unit_weights_delta = curr_input_unit_weights_delta
             previous_hidden_unit_weights_delta = curr_hidden_unit_weights_delta
 
-        if (idx+1) % 30000 == 0:
-            total_square_error, correct_predictions, incorrect_predictions = get_squared_error(testing_data_features,
-                                                                                               testing_data_labels,
-                                                                                               input_unit_weights,
-                                                                                               hidden_unit_weights)
-            print('n {} : SE: {} Correct: {} Incorrect: {}'.format(n, total_square_error, correct_predictions,
-                                                                   incorrect_predictions))
-    print('Wait!')
+            if (idx+1) % 30000 == 0:
+                total_square_error, correct_predictions, incorrect_predictions = get_squared_error(testing_data_features,
+                                                                                                   testing_data_labels,
+                                                                                                   input_unit_weights,
+                                                                                                   hidden_unit_weights)
+                print('n {} : SE: {} Correct: {} Incorrect: {}'.format(n, total_square_error, correct_predictions,
+                                                                       incorrect_predictions))
+    print('Done!')
 
 
 def get_squared_error(testing_data_features, testing_data_labels, input_unit_weights, hidden_unit_weights):
