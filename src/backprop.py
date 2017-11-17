@@ -79,7 +79,12 @@ def do_train(training_data_features,
     replace_nan_values(training_data_features, training_data_labels)
 
     # Initialize training parameters
-    parameters = HyperParameters(num_hidden_units=100, num_epochs=30, num_input_units=50, num_output_units=10)
+    parameters = HyperParameters(num_hidden_units=100,
+                                 num_epochs=30,
+                                 num_input_units=50,
+                                 num_output_units=10,
+                                 mini_batch_size=1,
+                                 learning_rate=0.1)
     input_unit_weights, hidden_unit_weights = parameters.initialize_weights()
 
     # Add bias units to the training features.
@@ -87,16 +92,18 @@ def do_train(training_data_features,
     #                                             np.full((training_data_features.shape[0],), 1.0), axis=1)
 
     training_data_features = scale(training_data_features, axis=0, with_mean=True, with_std=True)
-    testing_data_features  = scale(testing_data_features, axis=0, with_mean=True, with_std=True)
+    testing_data_features = scale(testing_data_features, axis=0, with_mean=True, with_std=True)
 
     input_unit_weights_delta = np.zeros(input_unit_weights.shape)
     hidden_unit_weights_delta = np.zeros(hidden_unit_weights.shape)
     for n in range(parameters.num_epochs()):
         for idx, training_example in enumerate(training_data_features):
-            start_time = time.time()
             # SGD
-            input_unit_weights = input_unit_weights + input_unit_weights_delta
-            hidden_unit_weights = hidden_unit_weights + hidden_unit_weights_delta
+            if idx % parameters.mini_batch_size() == 0:
+                input_unit_weights = input_unit_weights + input_unit_weights_delta
+                hidden_unit_weights = hidden_unit_weights + hidden_unit_weights_delta
+                input_unit_weights_delta = np.zeros(input_unit_weights.shape)
+                hidden_unit_weights_delta = np.zeros(hidden_unit_weights.shape)
 
             hidden_layer_values, output_layer_values = feed_forward(training_example,
                                                                     input_unit_weights,
@@ -105,14 +112,13 @@ def do_train(training_data_features,
                                                                                      hidden_unit_weights,
                                                                                      hidden_layer_values,
                                                                                      output_layer_values)
-            input_unit_weights_delta, hidden_unit_weights_delta = get_weight_delta(hidden_unit_error_terms,
-                                                                                   output_unit_error_terms,
-                                                                                   parameters,
-                                                                                   training_example,
-                                                                                   hidden_layer_values)
-        # nn = TrainedNetwork(input_unit_weights, hidden_unit_weights)
-        # squared_error += nn.test_predictions(training_example, training_data_labels)
-        # print('Squared error after epoch {} is {}'.format(squared_error, n))
+            curr_input_unit_weights_delta, curr_hidden_unit_weights_delta = get_weight_delta(hidden_unit_error_terms,
+                                                                                             output_unit_error_terms,
+                                                                                             parameters,
+                                                                                             training_example,
+                                                                                             hidden_layer_values)
+            input_unit_weights_delta += curr_input_unit_weights_delta
+            hidden_unit_weights_delta += curr_hidden_unit_weights_delta
         if n % 1 == 0:
             total_square_error, correct_predictions, incorrect_predictions = get_squared_error(testing_data_features,
                                                                                                testing_data_labels,
