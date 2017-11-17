@@ -81,18 +81,20 @@ def do_train(training_data_features,
     # Initialize training parameters
     parameters = HyperParameters(num_hidden_units=100,
                                  num_epochs=30,
-                                 num_input_units=50,
+                                 num_input_units=51,
                                  num_output_units=10,
                                  mini_batch_size=1,
                                  learning_rate=0.1)
     input_unit_weights, hidden_unit_weights = parameters.initialize_weights()
 
-    # Add bias units to the training features.
-    # training_data_features_with_bias = np.insert(training_data_features, 0,
-    #                                             np.full((training_data_features.shape[0],), 1.0), axis=1)
-
     training_data_features = scale(training_data_features, axis=0, with_mean=True, with_std=True)
     testing_data_features = scale(testing_data_features, axis=0, with_mean=True, with_std=True)
+
+    # Add bias units to the features.
+    training_data_features = np.insert(training_data_features, 0,
+                                       np.full((training_data_features.shape[0],), 1.0), axis=1)
+    testing_data_features = np.insert(testing_data_features, 0,
+                                       np.full((testing_data_features.shape[0],), 1.0), axis=1)
 
     input_unit_weights_delta = np.zeros(input_unit_weights.shape)
     hidden_unit_weights_delta = np.zeros(hidden_unit_weights.shape)

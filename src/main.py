@@ -5,7 +5,7 @@ import data_loader
 def initialize_weights():
     pass
 
-# 1 Experiment with bias unit
+# 1 Experiment with bias unit - Looks OK.
 # 2 Compute Squared loss after every half epoch
 # 3 Add momentum
 # 4 Plot squared loss

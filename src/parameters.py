@@ -44,12 +44,12 @@ class HyperParameters:
 
     def initialize_weights(self):
         if self._training_unit_weights is None:
-            training_unit_weights = 2.0 * np.random.random_sample((self._num_input_units, self._num_hidden_units)) - 1.0
+            training_unit_weights = 1.0 * np.random.random_sample((self._num_input_units, self._num_hidden_units)) - 0.5
         else:
             training_unit_weights = self._training_unit_weights
 
         if self._hidden_unit_weights is None:
-            hidden_unit_weights = 2.0 * np.random.random_sample((self._num_hidden_units, self._num_output_units)) - 1.0
+            hidden_unit_weights = 1.0 * np.random.random_sample((self._num_hidden_units, self._num_output_units)) - 0.5
         else:
             hidden_unit_weights = self._hidden_unit_weights
 
