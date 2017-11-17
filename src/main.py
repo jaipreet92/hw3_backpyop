@@ -1,10 +1,6 @@
 import backprop
 import data_loader
 
-
-def initialize_weights():
-    pass
-
 # 1 Experiment with bias unit - Looks OK.
 # 2 Compute Squared loss after every half epoch
 # 3 Add momentum
@@ -23,5 +19,3 @@ if __name__ == '__main__':
                       data_loader.transform_output_label_into_vector(input_labels),
                       testing_features,
                       data_loader.transform_output_label_into_vector(testing_labels))
-
-
