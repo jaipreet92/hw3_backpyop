@@ -220,7 +220,7 @@ def plot_error(parameters, epoch_nums, epoch_vals_test, epoch_vals_train, zero_o
     ax.plot(epoch_nums, epoch_vals_train, label='Train')
     ax.set(xlabel='Epoch #', ylabel='Squared Error', title='Hidden units: {}'.format(parameters.num_hidden_unit()))
     ax.legend()
-    fig.savefig('../data/{}_hu_mse_plot_{}.png'.format(parameters.num_hidden_unit(), parameters.idx()))
+    fig.savefig('../data/{}_mse_plot_{}_hu.png'.format(parameters.idx(), parameters.num_hidden_unit()))
 
     # Plot 0-1 loss
     fig2, ax2 = plt.subplots()
@@ -229,4 +229,4 @@ def plot_error(parameters, epoch_nums, epoch_vals_test, epoch_vals_train, zero_o
     ax2.legend()
     if min(zero_one_errors) < 0.07:
         ax2.set_ybound(upper=0.07)
-    fig2.savefig('../data/{}_hu_01_plot_{}.png'.format(parameters.num_hidden_unit(), parameters.idx()))
+    fig2.savefig('../data/{}_01_plot_{}_hu.png'.format(parameters.idx(), parameters.num_hidden_unit()))
