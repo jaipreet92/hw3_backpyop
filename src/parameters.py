@@ -14,9 +14,9 @@ class HyperParameters:
     _idx = None
 
     def __init__(self, num_hidden_units=100,
-                 mini_batch_size=100,
+                 mini_batch_size=1,
                  learning_rate=0.1,
-                 num_epochs=1,
+                 num_epochs=15,
                  num_input_units=51,
                  num_output_units=10,
                  momentum=0.1,
