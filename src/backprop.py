@@ -227,6 +227,6 @@ def plot_error(parameters, epoch_nums, epoch_vals_test, epoch_vals_train, zero_o
     ax2.plot(epoch_nums, zero_one_errors, label='Test')
     ax2.set(xlabel='Epoch #', ylabel='0/1 Loss', title='Hidden units: {}'.format(parameters.num_hidden_unit()))
     ax2.legend()
-    if min(zero_one_errors) > 0.07:
+    if min(zero_one_errors) < 0.07:
         ax2.set_ybound(upper=0.07)
     fig2.savefig('../data/{}_hu_01_plot_{}.png'.format(parameters.num_hidden_unit(), parameters.idx()))
