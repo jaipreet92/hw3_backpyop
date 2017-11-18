@@ -20,7 +20,9 @@ class HyperParameters:
                  num_input_units=51,
                  num_output_units=10,
                  momentum=0.1,
-                 idx=0):
+                 idx=0,
+                 low=-0.5,
+                 high=0.5):
         self._learning_rate = learning_rate
         self._mini_batch_size = mini_batch_size
         self._num_hidden_units = num_hidden_units
@@ -29,6 +31,8 @@ class HyperParameters:
         self._num_output_units = num_output_units
         self._momentum = momentum
         self._idx = idx
+        self._low = low
+        self._high = high
 
     def idx(self):
         return self._idx
@@ -56,12 +60,14 @@ class HyperParameters:
 
     def initialize_weights(self):
         if self._training_unit_weights is None:
-            training_unit_weights = 1.0 * np.random.random_sample((self._num_input_units, self._num_hidden_units)) - 0.5
+            training_unit_weights = (self._high - self._low) * np.random.random_sample(
+                (self._num_input_units, self._num_hidden_units)) + self._low
         else:
             training_unit_weights = self._training_unit_weights
 
         if self._hidden_unit_weights is None:
-            hidden_unit_weights = 1.0 * np.random.random_sample((self._num_hidden_units, self._num_output_units)) - 0.5
+            hidden_unit_weights = (self._high - self._low) * np.random.random_sample(
+                (self._num_hidden_units, self._num_output_units)) + self._low
         else:
             hidden_unit_weights = self._hidden_unit_weights
 
