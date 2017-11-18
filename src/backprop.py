@@ -74,7 +74,14 @@ def get_weight_delta(hidden_unit_error_terms,
 def do_train(training_data_features,
              training_data_labels,
              testing_data_features,
-             testing_data_labels):
+             testing_data_labels,
+             parameters = HyperParameters(num_hidden_units=100,
+                                          num_epochs=15,
+                                          num_input_units=51,
+                                          num_output_units=10,
+                                          mini_batch_size=1,
+                                          learning_rate=0.1,
+                                          momentum=0.1)):
     """
 
     :param training_data_features: 60000 x 50 matrix
@@ -85,14 +92,7 @@ def do_train(training_data_features,
     # Replace nan values in the training data
     replace_nan_values(training_data_features, training_data_labels)
 
-    # Initialize training parameters
-    parameters = HyperParameters(num_hidden_units=100,
-                                 num_epochs=15,
-                                 num_input_units=51,
-                                 num_output_units=10,
-                                 mini_batch_size=1,
-                                 learning_rate=0.1,
-                                 momentum=0.1)
+    # Initialize weights
     input_unit_weights, hidden_unit_weights = parameters.initialize_weights()
 
     training_data_features = scale(training_data_features, axis=0, with_mean=True, with_std=True)
@@ -114,6 +114,7 @@ def do_train(training_data_features,
     epoch_nums = np.arange(0.0, parameters.num_epochs(), 0.5)
     epoch_mse_vals_test = []
     epoch_mse_vals_train = []
+    zero_one_errors = []
 
     for n in range(parameters.num_epochs()):
         for idx, training_example in enumerate(training_data_features):
@@ -158,8 +159,12 @@ def do_train(training_data_features,
                                                                                          incorrect_predictions))
                 epoch_mse_vals_test.append(total_square_error_test)
                 epoch_mse_vals_train.append(total_square_error_train)
+                zero_one_errors.append(incorrect_predictions / (correct_predictions + incorrect_predictions))
     print('Done!')
-    plot_error(parameters, epoch_nums, epoch_vals_test=epoch_mse_vals_test, epoch_vals_train=epoch_mse_vals_train)
+    plot_error(parameters, epoch_nums,
+               epoch_vals_test=epoch_mse_vals_test,
+               epoch_vals_train=epoch_mse_vals_train,
+               zero_one_errors=zero_one_errors)
 
 
 def get_squared_error(testing_data_features,
@@ -208,11 +213,19 @@ def replace_nan_values(training_data, training_data_labels):
         np.nan_to_num(training_data_labels, copy=False)
 
 
-def plot_error(parameters, epoch_nums, epoch_vals_test, epoch_vals_train=None):
+def plot_error(parameters, epoch_nums, epoch_vals_test, epoch_vals_train, zero_one_errors):
+    # Plot MSE
     fig, ax = plt.subplots()
     ax.plot(epoch_nums, epoch_vals_test, label='Test')
-    if epoch_vals_train is not None:
-        ax.plot(epoch_nums, epoch_vals_train, label='Train')
+    ax.plot(epoch_nums, epoch_vals_train, label='Train')
     ax.set(xlabel='Epoch #', ylabel='Squared Error', title='Hidden units: {}'.format(parameters.num_hidden_unit()))
     ax.legend()
-    fig.savefig('../data/{}_hu_plot.png'.format(parameters.num_hidden_unit()))
+    fig.savefig('../data/{}_hu_mse_plot_{}.png'.format(parameters.num_hidden_unit(), parameters.idx()))
+
+    # Plot 0-1 loss
+    fig2, ax2 = plt.subplots()
+    ax2.plot(epoch_nums, zero_one_errors, label='Test')
+    ax2.set(xlabel='Epoch #', ylabel='0/1 Loss', title='Hidden units: {}'.format(parameters.num_hidden_unit()))
+    ax2.legend()
+    ax2.set_ybound(upper=0.07)
+    fig2.savefig('../data/{}_hu_01_plot_{}.png'.format(parameters.num_hidden_unit(), parameters.idx()))

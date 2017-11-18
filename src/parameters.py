@@ -11,6 +11,7 @@ class HyperParameters:
 
     _training_unit_weights = None
     _hidden_unit_weights = None
+    _idx = None
 
     def __init__(self, num_hidden_units=100,
                  mini_batch_size=100,
@@ -18,7 +19,8 @@ class HyperParameters:
                  num_epochs=1,
                  num_input_units=51,
                  num_output_units=10,
-                 momentum=0.1):
+                 momentum=0.1,
+                 idx=0):
         self._learning_rate = learning_rate
         self._mini_batch_size = mini_batch_size
         self._num_hidden_units = num_hidden_units
@@ -26,6 +28,10 @@ class HyperParameters:
         self._num_input_units = num_input_units
         self._num_output_units = num_output_units
         self._momentum = momentum
+        self._idx = idx
+
+    def idx(self):
+        return self._idx
 
     def momentum(self):
         return self._momentum
