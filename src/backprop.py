@@ -75,13 +75,13 @@ def do_train(training_data_features,
              training_data_labels,
              testing_data_features,
              testing_data_labels,
-             parameters = HyperParameters(num_hidden_units=100,
-                                          num_epochs=15,
-                                          num_input_units=51,
-                                          num_output_units=10,
-                                          mini_batch_size=1,
-                                          learning_rate=0.1,
-                                          momentum=0.1)):
+             parameters=HyperParameters(num_hidden_units=100,
+                                        num_epochs=15,
+                                        num_input_units=51,
+                                        num_output_units=10,
+                                        mini_batch_size=1,
+                                        learning_rate=0.1,
+                                        momentum=0.1)):
     """
 
     :param training_data_features: 60000 x 50 matrix
@@ -114,7 +114,8 @@ def do_train(training_data_features,
     epoch_nums = np.arange(0.0, parameters.num_epochs(), 0.5)
     epoch_mse_vals_test = []
     epoch_mse_vals_train = []
-    zero_one_errors = []
+    zero_one_errors_test = []
+    zero_one_errors_train = []
 
     for n in range(parameters.num_epochs()):
         for idx, training_example in enumerate(training_data_features):
@@ -145,7 +146,7 @@ def do_train(training_data_features,
             previous_hidden_unit_weights_delta = curr_hidden_unit_weights_delta
 
             if (idx + 1) % 30000 == 0:
-                total_square_error_test, total_square_error_train, correct_predictions, incorrect_predictions = \
+                total_square_error_test, total_square_error_train, test_correct_predictions, test_incorrect_predictions, train_error_rate = \
                     get_squared_error(
                         testing_data_features,
                         testing_data_labels,
@@ -153,18 +154,23 @@ def do_train(training_data_features,
                         hidden_unit_weights,
                         training_data_features,
                         training_data_labels)
-                print('n {} : Test SE: {} Train SR: {} Correct: {} Incorrect: {}'.format(n, total_square_error_test,
-                                                                                         total_square_error_train,
-                                                                                         correct_predictions,
-                                                                                         incorrect_predictions))
+                print(
+                    'n {} : Test SE: {} Train SE: {} Test Error Rate: {}, Train Error Rate: {}'.format(
+                        n, total_square_error_test,
+                        total_square_error_train,
+                        100.0*(test_incorrect_predictions / (test_correct_predictions + test_incorrect_predictions)),
+                        100.0*train_error_rate))
                 epoch_mse_vals_test.append(total_square_error_test)
                 epoch_mse_vals_train.append(total_square_error_train)
-                zero_one_errors.append(incorrect_predictions / (correct_predictions + incorrect_predictions))
+                zero_one_errors_test.append(
+                    (test_incorrect_predictions / (test_correct_predictions + test_incorrect_predictions)) * 100.9)
+                zero_one_errors_train.append(100.0 * train_error_rate)
     print('Done!')
     plot_error(parameters, epoch_nums,
                epoch_vals_test=epoch_mse_vals_test,
                epoch_vals_train=epoch_mse_vals_train,
-               zero_one_errors=zero_one_errors)
+               zero_one_errors_test=zero_one_errors_test,
+               zero_one_errors_train=zero_one_errors_train)
 
 
 def get_squared_error(testing_data_features,
@@ -175,8 +181,11 @@ def get_squared_error(testing_data_features,
                       training_data_labels):
     total_square_error_test = 0.0
     total_square_error_train = 0.0
-    correct_predictions = 0.0
-    incorrect_predictions = 0.0
+    test_correct_predictions = 0.0
+    test_incorrect_predictions = 0.0
+
+    train_correct_predictions = 0.0
+    train_incorrect_predictions = 0.0
     # Test data
     for idx, test_example in enumerate(testing_data_features):
         predicted_values = feed_forward(test_example, input_unit_weights, hidden_unit_weights)[1]
@@ -184,9 +193,9 @@ def get_squared_error(testing_data_features,
         total_square_error_test += np.sum(np.square(predicted_values - actual_values))
 
         if np.argmax(testing_data_labels[idx]) == np.argmax(predicted_values):
-            correct_predictions += 1.0
+            test_correct_predictions += 1.0
         else:
-            incorrect_predictions += 1.0
+            test_incorrect_predictions += 1.0
     if total_square_error_test == 0.0:
         raise ValueError('0 error ?!')
 
@@ -196,8 +205,15 @@ def get_squared_error(testing_data_features,
         actual_values = training_data_labels[idx]
         total_square_error_train += np.sum(np.square(predicted_values - actual_values))
 
+        if np.argmax(training_data_labels[idx]) == np.argmax(predicted_values):
+            train_correct_predictions += 1.0
+        else:
+            train_incorrect_predictions += 1.0
+
     return total_square_error_test / (2.0 * testing_data_labels.shape[0]), total_square_error_train / (
-        2.0 * training_data_labels.shape[0]), correct_predictions, incorrect_predictions
+        2.0 * training_data_labels.shape[
+            0]), test_correct_predictions, test_incorrect_predictions, train_incorrect_predictions / (
+           train_correct_predictions + train_incorrect_predictions)
 
 
 def replace_nan_values(training_data, training_data_labels):
@@ -213,7 +229,7 @@ def replace_nan_values(training_data, training_data_labels):
         np.nan_to_num(training_data_labels, copy=False)
 
 
-def plot_error(parameters, epoch_nums, epoch_vals_test, epoch_vals_train, zero_one_errors):
+def plot_error(parameters, epoch_nums, epoch_vals_test, epoch_vals_train, zero_one_errors_test, zero_one_errors_train):
     # Plot MSE
     fig, ax = plt.subplots()
     ax.plot(epoch_nums, epoch_vals_test, label='Test')
@@ -224,9 +240,10 @@ def plot_error(parameters, epoch_nums, epoch_vals_test, epoch_vals_train, zero_o
 
     # Plot 0-1 loss
     fig2, ax2 = plt.subplots()
-    ax2.plot(epoch_nums, zero_one_errors, label='Test')
+    ax2.plot(epoch_nums, zero_one_errors_test, label='Test')
+    ax2.plot(epoch_nums, zero_one_errors_train, label='Train')
     ax2.set(xlabel='Epoch #', ylabel='0/1 Loss', title='Hidden units: {}'.format(parameters.num_hidden_unit()))
     ax2.legend()
-    if min(zero_one_errors) < 0.07:
+    if min(zero_one_errors_test) < 0.07:
         ax2.set_ybound(upper=0.07)
     fig2.savefig('../data/{}_01_plot_{}_hu.png'.format(parameters.idx(), parameters.num_hidden_unit()))
