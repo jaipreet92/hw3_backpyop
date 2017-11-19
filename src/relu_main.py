@@ -13,7 +13,6 @@ if __name__ == '__main__':
 
     # Train the neural net
     for par in range(1):
-        # print('Training HP {} {}'.format(par.num_hidden_unit(), par.idx()))
         relu_backprop.do_train(input_x_features,
                           data_loader.transform_output_label_into_vector(input_labels),
                           testing_features,

@@ -20,8 +20,6 @@ def feed_forward(training_example,
     hidden_layer_values = np.maximum(np.dot(training_example, input_layer_weights), 0.0)
     # calculate output layer values
     output_layer_values = np.maximum(np.dot(hidden_layer_values, hidden_layer_weights), 0.0)
-    if np.any(np.isnan(hidden_layer_values)) or np.any(np.isnan(output_layer_values)):
-        print('SSTOP!')
     return hidden_layer_values, output_layer_values
 
 
@@ -41,14 +39,11 @@ def back_propagate_errors(training_example_label,
     output_unit_error_terms = np.zeros(output_unit_values.shape)
     output_unit_error_terms[output_unit_values > 0.0] = 1.0
     output_unit_error_terms = (training_example_label - output_unit_values) * output_unit_error_terms
-    # output_unit_error_terms = output_unit_values * (np.full(output_unit_values.shape, 1.0) - output_unit_values) * (
-    #     training_example_label - output_unit_values)
+
 
     hidden_unit_error_terms = np.zeros(hidden_unit_values.shape)
     hidden_unit_error_terms[hidden_unit_values > 0.0] = 1.0
     hidden_unit_error_terms = hidden_unit_error_terms * np.dot(hidden_layer_weights, output_unit_error_terms)
-    # hidden_unit_error_terms = np.dot(hidden_layer_weights, output_unit_error_terms) * hidden_unit_values * (
-    #     np.full(hidden_unit_values.shape, 1.0) - hidden_unit_values)
 
     return hidden_unit_error_terms, output_unit_error_terms
 
@@ -103,6 +98,7 @@ def do_train(training_data_features,
     # Initialize weights
     input_unit_weights, hidden_unit_weights = parameters.initialize_weights()
 
+    # Normalize the training data
     training_data_features = training_data_features / 1000.0
     testing_data_features = testing_data_features / 1000.0
 
